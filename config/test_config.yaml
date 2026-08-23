@@ -1,0 +1,80 @@
+# Deltaflow Test Configuration
+# NOTE: Performance limits (min_throughput_mps, max_p99_latency_ms,
+# max_mean_latency_ms) are placeholder estimates derived from general
+# QEC literature. These MUST be replaced with values from the official
+# Deltaflow 2 datasheet before this suite is used for acceptance testing.
+#
+# Network parameters (host, port) are lab-specific and must be
+# configured before running with use_real_hw: true.
+
+deltaflow:
+  # Set to true when connected to real Deltaflow hardware over QECi.
+  # False = use the software stub (harness/qeci_interface.py).
+  use_real_hw: false
+
+  # Network address of the Deltaflow QECi endpoint (ignored when stub is used)
+  host: "192.168.1.100"
+  port: 5000
+
+  # Maximum time (seconds) to wait for a correction result per chunk
+  response_timeout_s: 2.0
+
+qeci:
+  # SFP / packet link parameters (for real-HW mode)
+  mtu_bytes: 1500
+  link_speed_gbps: 10
+
+timing:
+  # Clock synchronization tolerance in microseconds.
+  # If measured skew > this value the test is flagged as unreliable.
+  max_clock_skew_us: 50
+
+  # Warm-up period before latency/throughput sampling begins
+  warmup_chunks: 20
+
+stimulus:
+  # Default chunk sizes (measurements per chunk) for parametric sweeps
+  chunk_sizes: [16, 32, 64, 128, 256]
+
+  # Default measurement rates (measurements/s) for throughput sweep
+  rates_mps: [1000, 5000, 10000, 50000, 100000]
+
+  # Number of chunks per test run at a fixed rate
+  chunks_per_run: 200
+
+  # Number of bits per measurement (syndrome width)
+  measurement_bits: 8
+
+performance:
+  # Minimum acceptable throughput (measurements/s)
+  min_throughput_mps: 10000
+
+  # Maximum acceptable p99 latency in milliseconds
+  max_p99_latency_ms: 10.0
+
+  # Maximum acceptable mean latency in milliseconds
+  max_mean_latency_ms: 5.0
+
+burst:
+  # Duration of an injected burst (seconds)
+  burst_duration_s: 2.0
+
+  # Multiplier over nominal rate during burst
+  burst_multiplier: 3
+
+  # Time allowed for system to recover after burst (seconds)
+  recovery_timeout_s: 10.0
+
+impairment:
+  # Extra delay added to each packet (milliseconds)
+  extra_delay_ms: 5.0
+
+  # Probability of packet loss (0.0 – 1.0)
+  loss_probability: 0.01
+
+  # Probability of packet reorder
+  reorder_probability: 0.005
+
+reporting:
+  output_dir: "reports"
+  keep_raw_traces: true

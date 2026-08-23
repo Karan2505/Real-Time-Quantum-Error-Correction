@@ -1,0 +1,5 @@
+pytest>=7.4
+pytest-timeout>=2.2
+numpy>=1.24
+pyyaml>=6.0
+rich>=13.0          # coloured terminal reports

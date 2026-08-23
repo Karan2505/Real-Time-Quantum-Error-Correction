@@ -1,0 +1,15 @@
+# Python bytecode and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local virtual environments
+riverlane/
+riverlane.broken-*/
+.venv/
+venv/
+
+# Local and generated files
+.DS_Store
+reports/*.json
+reports/*.txt
