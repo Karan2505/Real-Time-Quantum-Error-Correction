@@ -2,14 +2,22 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
 
-# Local virtual environments
+# Local virtual environments and package artifacts
 riverlane/
 riverlane.broken-*/
 .venv/
 venv/
+env/
+*.egg-info/
+build/
+dist/
 
-# Local and generated files
+# Local configuration and generated files
+.env
 .DS_Store
 reports/*.json
 reports/*.txt
