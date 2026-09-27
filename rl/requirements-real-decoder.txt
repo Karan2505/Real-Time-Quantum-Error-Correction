@@ -1,0 +1,30 @@
+# rl/requirements-real-decoder.txt
+# =================================
+# Optional dependencies for Phase 2's REAL (non-mock) decoder layer
+# (rl/qec_problem.py, rl/bp_decoder_adapter.py, tests/rl/test_bp_decoder_adapter.py).
+#
+# These are separate from the top-level requirements.txt on purpose:
+# requirements.txt is Karan's Deltaflow validation-framework dependency
+# list and is out of scope for this package to modify. Phase 1's mock
+# infrastructure (rl/mock_decoder.py) has no dependency beyond numpy
+# (already in requirements.txt) and will keep working even if these
+# are never installed.
+#
+# All four install with prebuilt wheels on Windows/macOS/Linux for
+# common Python versions - no Rust/C++ toolchain required.
+#
+# Install with:
+#   pip install -r rl/requirements-real-decoder.txt
+
+stim>=1.16
+ldpc>=2.4
+bposd>=2.1
+stimbposd>=0.1
+
+# NOT included here: the `relay-bp` package (real Relay-BP, as opposed
+# to the plain BP this layer currently uses). It requires a Rust
+# toolchain to build on this platform (no prebuilt wheel for common
+# Python/OS combos yet). Install separately once Rust is set up:
+#   pip install relay-bp
+# See rl/bp_decoder_adapter.py's module docstring for what changes
+# (and what doesn't) once relay-bp is swapped in.

@@ -87,10 +87,10 @@ class ReportGenerator:
         json_path = os.path.join(self.output_dir, f"{run_id}.json")
         txt_path  = os.path.join(self.output_dir, f"{run_id}.txt")
 
-        with open(json_path, "w") as f:
+        with open(json_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
 
-        with open(txt_path, "w") as f:
+        with open(txt_path, "w", encoding="utf-8") as f:
             f.write(self._format_text(report))
 
         return json_path
