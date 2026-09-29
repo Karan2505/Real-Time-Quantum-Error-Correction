@@ -67,9 +67,3 @@ Oracle agreement  A = M_match / N_total
   sub-millisecond latency accuracy; see `harness/timestamp_capture.py`.
 - Syndrome traces in `fixtures/syndrome_traces.py` are deterministic stand-ins
   until real qubit-derived captures are available.
-
-## AI Usage Disclosure
-
-This framework was produced with generative AI assistance (Claude, Anthropic).
-The test strategy, measurement methodology, and acceptance criteria are drawn
-from the accompanying test plan document authored by the candidate.
