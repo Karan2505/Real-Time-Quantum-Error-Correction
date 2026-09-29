@@ -1,0 +1,8 @@
+# Bivariate-bicycle [[72,12,6]] code on a code-native (long-range coupler) chip.
+[lab]
+seed = 3
+profile = "sota"
+
+[[lab.patches]]
+patch_id = 0
+code = "bb:72"

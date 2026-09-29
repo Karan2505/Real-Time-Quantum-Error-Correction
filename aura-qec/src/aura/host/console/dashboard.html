@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AURA-QEC Ops Console</title>
+<style>
+:root{--bg:#f6f7f9;--card:#ffffff;--ink:#16202c;--muted:#5b6675;--line:#dfe3e8;--accent:#0e8c7f;--warn:#c6621b;--bad:#b3261e;--ok:#1a7f37;--navy:#12233f;--x:#6d4bd8;--z:#0e8c7f;--d:#12233f}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d26;--ink:#e6ebf1;--muted:#98a4b3;--line:#2a3441;--navy:#9fb4d6;--d:#9fb4d6}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+h1{font-size:17px;margin:0;letter-spacing:.2px}h1 span{color:var(--muted);font-weight:500}
+main{padding:16px 20px;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));max-width:1500px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.wide{grid-column:1/-1}.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px}.kv b{font-weight:600;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line)}
+.UP,.done{color:var(--ok);border-color:var(--ok)}.SYNCING,.CONNECTING,.CONFIGURING,.running,.queued{color:var(--warn);border-color:var(--warn)}.DOWN,.FAILED,.failed{color:var(--bad);border-color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-weight:600}
+form{display:flex;flex-wrap:wrap;gap:8px;align-items:end}label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:3px}
+input,select,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}input{width:90px}
+button{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;cursor:pointer}button.sec{background:transparent;color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}#map{width:100%;height:320px;display:block}
+.log{font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--muted)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.muted{color:var(--muted)}.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<header><h1>AURA-QEC <span>Ops Console · Layer 0 + AURA-Link</span></h1><div id="clock" class="muted">connecting…</div></header>
+<main>
+  <section class="card"><h2>Device</h2><div class="kv" id="device"></div></section>
+  <section class="card"><h2>Calibration</h2><div class="kv" id="cal"></div>
+    <form onsubmit="return false" style="margin-top:10px">
+      <button onclick="calib('full')">Full bring-up</button><button class="sec" onclick="calib('maintain')">Maintain</button><button class="sec" onclick="calib('oracle')" title="copies hidden truth; test mode">Oracle (test)</button>
+    </form></section>
+  <section class="card"><h2>AURA-Link</h2><div class="kv" id="link"></div></section>
+  <section class="card wide"><h2>Device map</h2><svg id="map" role="img" aria-label="qubit layout"></svg>
+    <div class="legend"><span><i style="background:var(--d)"></i>data</span><span><i style="background:var(--x)"></i>X ancilla</span><span><i style="background:var(--z)"></i>Z ancilla</span><span>ring = readout error (thicker = worse) · hover for details</span></div></section>
+  <section class="card wide"><h2>Run experiment</h2>
+    <form id="runform" onsubmit="submitRun(event)">
+      <label>rounds<input name="rounds" type="number" min="1" value="3"></label>
+      <label>basis<select name="basis"><option>Z</option><option>X</option></select></label>
+      <label>shots<input name="shots" type="number" min="1" value="200"></label>
+      <label>decoder<select name="decoder"><option>matching</option><option>oracle</option><option>null</option></select></label>
+      <label>mode<select name="mode"><option>stream</option><option>batch</option></select></label>
+      <label>feed-forward<select name="branching"><option value="false">off</option><option value="true">on</option></select></label>
+      <button type="submit">Run</button>
+      <span style="flex:1"></span>
+      <label>link BER (down)<input id="ber" type="text" value="0"></label><button type="button" class="sec" onclick="setBer()">Apply</button>
+    </form>
+    <div id="formerr" class="err"></div></section>
+  <section class="card wide"><h2>Jobs</h2><table><thead><tr><th>id</th><th>kind</th><th>state</th><th>params</th><th>result</th></tr></thead><tbody id="jobs"></tbody></table></section>
+  <section class="card wide"><h2>Runs</h2><table><thead><tr><th>run</th><th>experiment</th><th>mode</th><th>decoder</th><th>shots</th><th>logical error rate</th></tr></thead><tbody id="runs"></tbody></table></section>
+  <section class="card wide"><h2>Event log</h2><div class="log" id="log"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(v,d=3)=>v===null||v===undefined||Number.isNaN(v)?'—':(typeof v==='number'?(Math.abs(v)>=1e4||Math.abs(v)<1e-3&&v!==0?v.toExponential(2):v.toFixed(d)):esc(v));
+const kv=(el,rows)=>{el.innerHTML=rows.map(([k,v])=>`<span class="muted">${esc(k)}</span><b>${v}</b>`).join('')};
+async function api(path,opts){const r=await fetch(path,opts);const j=await r.json();if(!r.ok)throw new Error(j.error||r.statusText);return j}
+function drawMap(qs){const svg=$('map');if(!qs||!qs.length){svg.innerHTML='';return}
+  const xs=qs.map(q=>q.coords[0]),ys=qs.map(q=>q.coords[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const W=svg.clientWidth||900,H=320,pad=24;const sx=v=>pad+(x1>x0?(v-x0)/(x1-x0):.5)*(W-2*pad),sy=v=>pad+(y1>y0?(v-y0)/(y1-y0):.5)*(H-2*pad);
+  const r=Math.max(3,Math.min(11,(W-2*pad)/Math.max(8,Math.sqrt(qs.length)*3)));const col={data:'var(--d)',x_ancilla:'var(--x)',z_ancilla:'var(--z)'};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=qs.map(q=>{const e=q.readout_err_est;const sw=e==null?0.8:Math.min(5,1+e*300);
+    const tip=`${q.name} (${q.role})\nT1 est ${fmt(q.t1_us_est,1)} µs · truth ${fmt(q.t1_us_true,1)} µs\nreadout err est ${fmt(e,4)}\ndetuning (truth) ${fmt(q.detuning_khz_true,1)} kHz\n${q.calibrated?'calibrated':'NOT calibrated'}`;
+    return `<circle cx="${sx(q.coords[0])}" cy="${sy(q.coords[1])}" r="${r}" fill="${col[q.role]||'gray'}" stroke="${q.calibrated?'var(--ok)':'var(--bad)'}" stroke-width="${sw}"><title>${esc(tip)}</title></circle>`}).join('')}
+async function refresh(){
+  try{const s=await api('/api/status');
+    $('clock').textContent=`virtual time ${fmt(s.virtual_time_us,1)} µs`+(s.busy?` · busy: ${s.busy}`:'')+(s.stale?' · (showing last snapshot)':'');
+    if(s.device){kv($('device'),[['name',esc(s.device.name)],['qubits',s.device.qubits],['couplers',s.device.couplers],['profile',esc(s.device.profile)],['patches',Object.entries(s.device.patches).map(([k,v])=>`${k}: ${esc(v)}`).join('<br>')],['cosmic-ray events',s.cosmic_events]])}
+    if(s.calibration){const c=s.calibration;kv($('cal'),[['store version',c.version],['readout calibrated',`${c.readout_calibrated}/${c.qubits}`],['median T1',fmt(c.median_t1_us,1)+' µs'],['median readout error',fmt(c.median_readout_error,4)],['median CZ error',fmt(c.median_cz_error,4)]])}
+    if(s.link){const l=s.link;kv($('link'),[['control',`<span class="pill ${l.control}">${l.control}</span>`],['gateway',`<span class="pill ${l.gateway}">${l.gateway}</span>`],['config epoch','0x'+(l.epoch>>>0).toString(16).padStart(8,'0')],['clock offset',fmt(l.time_offset_ps==null?null:l.time_offset_ps/1000,2)+' ns'],['path delay',fmt(l.path_delay_ps==null?null:l.path_delay_ps/1000,1)+' ns'],['credits',l.credits]])}
+    if(s.qubits)drawMap(s.qubits);
+    if(s.runs)$('runs').innerHTML=s.runs.slice().reverse().map(r=>`<tr><td><a href="/api/runs/${esc(r.run_id)}" target="_blank">${esc(r.run_id)}</a></td><td>${esc(r.experiment)}</td><td>${esc(r.mode)}</td><td>${esc(r.decoder)}</td><td>${r.shots}</td><td>${r.ler.map(x=>fmt(x,4)).join(', ')}</td></tr>`).join('');
+    if(s.events)$('log').textContent=s.events.slice().reverse().map(e=>`[${e.t_us.toFixed(1)} µs] ${e.msg}`).join('\n');
+  }catch(e){$('clock').textContent='disconnected: '+e.message}
+  try{const js=await api('/api/jobs');$('jobs').innerHTML=js.map(j=>`<tr><td>${esc(j.id)}</td><td>${esc(j.kind)}</td><td><span class="pill ${esc(j.state)}">${esc(j.state)}</span></td><td>${esc(JSON.stringify(j.params))}</td><td><pre style="margin:0;white-space:pre-wrap">${esc(j.error||(j.result&&(j.result.summary||j.result.actions))||'')}</pre></td></tr>`).join('')}catch(e){}
+}
+async function calib(mode){try{await api('/api/calibrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode})});refresh()}catch(e){$('formerr').textContent=e.message}}
+async function submitRun(ev){ev.preventDefault();$('formerr').textContent='';const f=new FormData($('runform'));const b=Object.fromEntries(f.entries());b.branching=b.branching==='true';
+  try{await api('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});refresh()}catch(e){$('formerr').textContent=e.message}}
+async function setBer(){try{await api('/api/impairments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ber:parseFloat($('ber').value)||0,direction:'down'})})}catch(e){$('formerr').textContent=e.message}}
+refresh();setInterval(refresh,1500);addEventListener('resize',refresh);
+</script>
+</body>
+</html>

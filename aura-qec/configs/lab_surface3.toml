@@ -1,0 +1,38 @@
+# AURA-QEC virtual lab: one distance-3 rotated surface-code patch on a
+# state-of-the-art-class device.  Units: durations in ps unless noted.
+
+[lab]
+seed = 1
+profile = "sota"            # sota | nisq | ideal
+drift_speedup = 1.0         # 1 = realistic drift time scales
+cosmic_rays = true
+decoder_latency_ns = 400.0  # stand-in decoder: fixed latency ...
+decoder_per_event_ns = 20.0 # ... plus per detection event
+
+[[lab.patches]]
+patch_id = 0
+code = "surface:3"
+
+[control]
+readout_chain_ps = 400000   # qubit -> ADC
+classify_ps = 120000
+crossbar_ps = 140000
+packetize_ps = 40000
+feedback_route_ps = 160000
+soft_bits = 4
+
+[link]
+soft_bits = 4
+fifo_capacity = 512
+reorder_timeout_ps = 2000000
+
+[link.phy]
+line_rate_gbps = 10.3125    # SFP+ 10GBASE-R
+cable_m = 2.0
+core_clock_mhz = 300.0
+
+[link.timesync]
+interval_ps = 20000000      # 20 us
+
+[calibration]
+shots = 400

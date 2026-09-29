@@ -1,0 +1,17 @@
+# Two logical patches (surface-5 and a repetition code) sharing one control
+# system and one AURA-Link session: exercises multi-stream ingress.
+[lab]
+seed = 2
+profile = "sota"
+
+[[lab.patches]]
+patch_id = 0
+code = "surface:5"
+
+[[lab.patches]]
+patch_id = 1
+code = "rep:7"
+
+[link.phy]
+line_rate_gbps = 25.78125   # SFP28 25GBASE-R
+core_clock_mhz = 400.0

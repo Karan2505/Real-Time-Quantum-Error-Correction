@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aura-qec"
+version = "0.1.0"
+description = "AURA-QEC Layer 0 (virtual superconducting QPU, real-time control system, control-system host) and Layer 1 (AURA-Link ingress transport gateway)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary - all rights reserved" }
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+decoders = ["pymatching>=2.1"]
+test = ["pytest>=7", "stim>=1.12", "pymatching>=2.1"]
+crc = ["crc32c>=2.3"]
+
+[project.scripts]
+aura = "aura.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"aura.host.console" = ["dashboard.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["slow: long-running statistical / integration tests (deselect with -m 'not slow')"]
